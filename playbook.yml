@@ -1,0 +1,37 @@
+---
+- hosts: all
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: Update hosts
+      yum: 
+        name: '*'
+        state: latest
+    - name: Install InfluxDB repo
+      yum_repository:
+        name: influxdb
+        description: "InfluxDB Repository - RHEL {{ ansible_distribution_major_version }}"
+        baseurl: "https://repos.influxdata.com/rhel/{{ ansible_distribution_major_version }}/{{ ansible_architecture }}/stable"
+        enabled: 1
+        gpgcheck: 1
+        gpgkey: https://repos.influxdata.com/influxdb.key
+    - name: Install common packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - vim
+        - influxdb
+        - telegraf
+
+- hosts: influxdServers
+  become: yes
+  become_user: root
+  become_method: sudo
+  tasks:
+    - name: Enable InfluxDB server
+      service:
+        name: influxd
+        state: started
+        enabled: true
